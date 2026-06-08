@@ -30,11 +30,27 @@ pipeline {
       }
     }
     stage('Build and Push Docker Image') {
-      environment {
-        DOCKER_IMAGE = "abhishekf5/ultimate-cicd:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
-        REGISTRY_CREDENTIALS = credentials('docker-cred')
-      }
+  environment {
+    DOCKER_IMAGE = "abhishekf5/ultimate-cicd:${BUILD_NUMBER}"
+    REGISTRY_CREDENTIALS = credentials('docker-cred')
+  }
+
+  steps {
+    script {
+      sh '''
+        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+
+        echo "Building Docker image..."
+        /usr/bin/docker build -t $DOCKER_IMAGE .
+
+        echo "Pushing Docker image..."
+        echo $REGISTRY_CREDENTIALS_PSW | /usr/bin/docker login -u $REGISTRY_CREDENTIALS_USR --password-stdin
+
+        /usr/bin/docker push $DOCKER_IMAGE
+      '''
+    }
+  }
+}
       steps {
         script {
             sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
